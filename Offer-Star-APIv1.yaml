@@ -1,0 +1,266 @@
+swagger: '2.0'
+info:
+  description: >-
+
+    ### 1 Introduction 
+     •  Mercedes me connect will allow MBUSA to use vehicle triggers to have information, and send messages to customers based on vehicle requirements. 
+     •  Here, the lead will be sent from the vehicle through Daimler systems, XPSM will then forward the copy of the message from the vehicle to the star API.
+     •  In the star API the message is stored and then transformed into a message that will be sent to the Autopoint system for creating actual customer messaging.
+
+
+     ### 2 Error Responses
+     In case of business specific errors resource provider will deliver an standard error response object being described in each resource definition. Intended use of the object is logging only. Please refer to the standardized error response code about additional metainformation about the error.
+     In order to recognize a business error do the following:
+     * Check if HTTP status code is higher or equal to 400
+     * Check availability of HTTP Header X-ErrorCode.
+
+    ### 3 Error Codes
+
+     * Please check the HTTP error codes
+
+
+    ## 4 Authentication
+
+    Consumers calling the starAPI service are authenticated using:
+
+     * A SSL certificate, which is required to establish the HTTPS connection
+     * A preemptive HTTP Basic authentication using a technical user/password
+
+    If the authentication fails, the service request returns with an HTTP `401
+    Unauthorized` error code.
+  version: 1.0.0
+  title: AfterSales Lead Offers
+basePath: /xpsm/v1/customer/leads/services/aftersales/offers
+produces:
+  - application/json
+paths:
+  /offers:
+    post:
+      consumes:
+        - application/json
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/Offer'
+      responses:
+        '200':
+          description: 'Success\:\ offer info sent'
+          schema:
+            $ref: '#/definitions/OfferResponse'
+        '204':
+          description: No Content Found
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized  Error
+        '500':
+          description: Internal Server Error
+definitions:
+  Offer:
+    type: object
+    description: Object for the offer
+    properties:
+      offerNumber:
+        type: string
+        description: >-
+          Unique offer number, this consists of the prefix "O-", capital
+          2-letter ISO code of the country of the outlet and the left padded (15
+          digits) oid (O-[A-Z]{2}[0-9]{15})
+      locale:
+        type: string
+        description: 'Locale, that was used for generating the offer'
+      status:
+        $ref: '#/definitions/Status'
+      creationDate:
+        type: string
+        format: date
+        description: The creation date of the offer
+      gssnOutletId:
+        type: string
+        description: >-
+          Alpha numeric code which identifies the sub-outlet. Starting with GS
+          as abbr. for "GSsn Outlet id" counting up from GS0000001
+          ((GS[0-9]{7}))
+      customer:
+        $ref: '#/definitions/Customer'
+      contactPerson:
+        $ref: '#/definitions/ContactPerson'
+      vehicle:
+        $ref: '#/definitions/Vehicle'
+      itemGroups:
+        type: array
+        description: The list of item groups
+        items:
+          $ref: '#/definitions/ItemGroup'
+  ItemGroup:
+    type: object
+    description: >-
+      Contains data from lead, which is used for generating an offer. It
+      represents a position within the offer containing a description, service
+      packages, parts and operations
+    properties:
+      leadTopic:
+        $ref: '#/definitions/LeadTopic'
+      subTopic:
+        type: string
+        description: Subtopic of the lead. For telediagnosis only
+      serviceCode:
+        type: string
+        description: service code of the lead. For maintenance only
+      description:
+        type: string
+        description: Description of the current item group
+      trackingId:
+        type: string
+        description: >-
+          Technical id, that is used for tracking over different systems - Eg.
+          "4JGDA5HB3CA000599;2017-10-15T18:20:17.777"
+      leadCaseNumber:
+        type: string
+        description: Numeric id of the lead
+      leadCreationDate:
+        type: string
+        format: date
+        description: The creation date of the lead
+  Status:
+    type: string
+    description: Current offer status in the Service Management process
+    enum:
+      - INCOMPLETE
+      - COMPLETE
+      - CHANGE_REQUESTED
+      - SENT
+      - ACCEPTED
+      - REFUSED
+      - EXPIRED
+      - SCHEDULED
+      - CANCELLED
+      - CLOSED
+  Customer:
+    type: object
+    description: 'Customer, for that the offer was generated'
+    properties:
+      ciamId:
+        type: string
+        description: Unique customer identification number
+      salutation:
+        type: string
+        description: Customer's salutation
+      firstName:
+        type: string
+        description: Customer's first name
+      lastName:
+        type: string
+        description: Customer's last name
+      email:
+        type: string
+        description: Customer's email address
+      phoneNumber:
+        type: string
+        description: Customer's landline phone number
+      mobilePhoneNumber:
+        type: string
+        description: Customer's mobile phone number
+      preferredCommunicationChannels:
+        type: array
+        items:
+          type: string
+          enum:
+            - EMAIL
+            - MERCEDES_ME
+            - FAXORMAIL
+            - PHONE
+            - SMS
+      address:
+        $ref: '#/definitions/Address'
+  Address:
+    type: object
+    description: Address object
+    properties:
+      street:
+        type: string
+        description: Street name with house number
+      city:
+        type: string
+        description: City name
+      zipCode:
+        type: string
+        description: ZIP code
+  ContactPerson:
+    type: object
+    description: The offer's contact person
+    properties:
+      salutation:
+        type: string
+        description: Contact Person's salutation
+      firstName:
+        type: string
+        description: Contact Person's first name
+      lastName:
+        type: string
+        description: Contact Person's last name
+      phoneNumber:
+        type: string
+        description: Contact Person's phone number
+  Vehicle:
+    type: object
+    description: 'Customer''s vehicle, for that the offer was generated'
+    properties:
+      vin:
+        type: string
+        description: >-
+          A vehicle identification number, commonly abbreviated to VIN, or
+          chassis number, is a unique code including a serial number, used by
+          the automotive industry to identify individual motor vehicles, towed
+          vehicles, motorcycles, scooters and mopeds as defined in ISO 3833
+      licensePlate:
+        type: string
+        description: License plate
+      salesDesignation:
+        type: string
+        description: Sales designation of the vehicle (ODC/VeDoc/Compass)
+      mileage:
+        type: integer
+        format: int64
+        description: Mileage
+      mileageUnit:
+        $ref: '#/definitions/MileageUnit'
+  MileageUnit:
+    type: string
+    description: The different possible units for the mileage of the vehicle
+    enum:
+      - MI
+      - KM
+  LeadTopic:
+    type: string
+    description: The different possible topics/types for an item group
+    enum:
+      - WITH_CONTRACT
+      - WITHOUT_CONTRACT
+      - TELEDIAGNOSIS
+  OfferResponse:
+    type: object
+    description: Response object for the offer
+    properties:
+      trackingId:
+        type: string
+        description: >-
+          Technical id, that is used for tracking over different systems - Eg.
+          "4JGDA5HB3CA000599;2017-10-15T18:20:17.777"
+      offerNumber:
+        type: string
+        description: >-
+          Unique offer number, this consists of the prefix "O-", capital
+          2-letter ISO code of the country of the outlet and the left padded (15
+          digits) oid (O-[A-Z]{2}[0-9]{15})
+      status:
+        type: string
+        description: >-
+          ACCEPTED - Offer received by API gateway but failed to submit to
+          Business Partner. SENT     - Offer received by API gateway and
+          successfully sent to Business Partner.
+        enum:
+          - ACCEPTED
+          - SENT
